@@ -1,0 +1,41 @@
+local animations = {
+    idle = "rbxassetid://18537387180"
+}
+
+local function replaceAnimations()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local animateScript = character:WaitForChild("Animate")
+
+    for animationType, animationId in pairs(animations) do
+        if animateScript:FindFirstChild(animationType) then
+            for _, anim in ipairs(animateScript[animationType]:GetChildren()) do
+                if anim:IsA("Animation") then
+                    anim.AnimationId = animationId
+                end
+            end
+        end
+    end
+
+    local idle = animateScript:FindFirstChild("idle")
+    if idle then
+        for _, anim in ipairs(idle:GetChildren()) do
+            if anim:IsA("Animation") then
+                anim.AnimationId = animations.idle
+            end
+        end
+    end
+end
+
+local function ensureAnimationsLoop()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    humanoid.AnimationPlayed:Connect(function(animationTrack)
+        animationTrack.Looped = true
+    end)
+end
+
+replaceAnimations()
+ensureAnimationsLoop()
