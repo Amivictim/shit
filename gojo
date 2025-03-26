@@ -1,41 +1,78 @@
-local animations = {
-    idle = "rbxassetid://18537387180"
-}
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local function replaceAnimations()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local animateScript = character:WaitForChild("Animate")
+local tool = Instance.new("Tool")
+tool.Name = "Heavenly Float"
+tool.RequiresHandle = false
+tool.Parent = player.Backpack
 
-    for animationType, animationId in pairs(animations) do
-        if animateScript:FindFirstChild(animationType) then
-            for _, anim in ipairs(animateScript[animationType]:GetChildren()) do
-                if anim:IsA("Animation") then
-                    anim.AnimationId = animationId
-                end
-            end
+local function detectChatSystem()
+    local chatService = game:GetService("TextChatService")
+    if chatService and chatService.TextChannels then
+        local defaultChannel = chatService.TextChannels:FindFirstChild("RBXGeneral")
+        if defaultChannel then
+            return "new"
         end
     end
 
-    local idle = animateScript:FindFirstChild("idle")
-    if idle then
-        for _, anim in ipairs(idle:GetChildren()) do
-            if anim:IsA("Animation") then
-                anim.AnimationId = animations.idle
-            end
+    if game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") then
+        return "old"
+    end
+
+    return "none"
+end
+
+local function sendChatMessage(message, chatType)
+    if chatType == "new" then
+        local chatService = game:GetService("TextChatService")
+        local defaultChannel = chatService.TextChannels:FindFirstChild("RBXGeneral")
+        if defaultChannel then
+            defaultChannel:SendAsync(message)
         end
+    elseif chatType == "old" then
+        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+    else
+        warn("No compatible chat sys")
     end
 end
 
-local function ensureAnimationsLoop()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
+local chatType = detectChatSystem()
 
-    humanoid.AnimationPlayed:Connect(function(animationTrack)
-        animationTrack.Looped = true
-    end)
+if chatType == "none" then
+    warn("No chat sys detected")
+    return
 end
 
-replaceAnimations()
-ensureAnimationsLoop()
+local animation = Instance.new("Animation")
+animation.AnimationId = "rbxassetid://18537387180"
+
+tool.Activated:Connect(function()
+    humanoid.PlatformStand = true
+    local animTrack = humanoid:LoadAnimation(animation)
+    animTrack:Play()
+
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+    humanoidRootPart.Anchored = true
+
+    sendChatMessage("Sorry...", chatType)
+    wait(5)
+    sendChatMessage("Amanai.", chatType)
+    wait(5)
+    sendChatMessage("I'm not even angry over you right now.", chatType)
+    wait(7)
+    sendChatMessage("I bear no grudge against anyone.", chatType)
+    wait(7)
+    sendChatMessage("It's just that the world feels so..", chatType)
+    wait(8)
+    sendChatMessage("So wonderful right now.", chatType)
+    wait(8)
+    sendChatMessage("Throughout Heaven and Earth..", chatType)
+    wait(8)
+    sendChatMessage("I alone am the honored one.", chatType)
+
+    wait(300)
+end)
+
+print("put the fries on the bag succesfull")
